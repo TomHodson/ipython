@@ -80,6 +80,11 @@ info_fields = ['type_name', 'base_class', 'string_form', 'namespace',
                'ismagic', 'isalias', 'isclass', 'found', 'name'
                ]
 
+import docstring_parser as dp
+def _parse_ds(ds):
+    "Parse a docstring and return it in NUMPYDOC format"
+    docstring = dp.parse(ds)
+    return dp.compose(docstring, style = dp.DocstringStyle.NUMPYDOC, rendering_style=dp.RenderingStyle.EXPANDED)
 
 def object_info(**kw):
     """Make an object info dict with all fields present."""
@@ -835,10 +840,7 @@ class Inspector(Colorable):
 
         # Add docstring only if no source is to be shown (avoid repetitions).
         if ds and not self._source_contains_docstring(out.get('source'), ds):
-            import docstring_parser as dp
-            docstring = dp.parse(ds)
-            parsed_ds = dp.compose(docstring, style = dp.DocstringStyle.NUMPYDOC)
-            out['docstring'] = parsed_ds
+            out['docstring'] = _parse_ds(ds)
 
         # Constructor docstring for classes
         if inspect.isclass(obj):
@@ -872,7 +874,7 @@ class Inspector(Colorable):
                 out['init_definition'] = init_def
 
             if init_ds:
-                out['init_docstring'] = init_ds
+                out['init_docstring'] = _parse_ds(init_ds)
 
             names = [sub.__name__ for sub in type.__subclasses__(obj)]
             if len(names) < 10:
@@ -902,7 +904,7 @@ class Inspector(Colorable):
                 if class_ds in _builtin_type_docstrings:
                     class_ds = None
                 if class_ds and ds != class_ds:
-                    out['class_docstring'] = class_ds
+                    out['class_docstring'] = _parse_ds(class_ds)
 
             # Next, try to show constructor docstrings
             try:
@@ -913,7 +915,7 @@ class Inspector(Colorable):
             except AttributeError:
                 init_ds = None
             if init_ds:
-                out['init_docstring'] = init_ds
+                out['init_docstring'] = _parse_ds(init_ds)
 
             # Call form docstring for callable instances
             if safe_hasattr(obj, '__call__') and not is_simple_callable(obj):
@@ -927,7 +929,7 @@ class Inspector(Colorable):
                 if call_ds == _func_call_docstring:
                     call_ds = None
                 if call_ds:
-                    out['call_docstring'] = call_ds
+                    out['call_docstring'] = _parse_ds(call_ds)
 
         return object_info(**out)
 
