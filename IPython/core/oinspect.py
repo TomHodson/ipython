@@ -835,7 +835,10 @@ class Inspector(Colorable):
 
         # Add docstring only if no source is to be shown (avoid repetitions).
         if ds and not self._source_contains_docstring(out.get('source'), ds):
-            out['docstring'] = ds
+            import docstring_parser as dp
+            docstring = dp.parse(ds)
+            parsed_ds = dp.compose(docstring, style = dp.DocstringStyle.NUMPYDOC)
+            out['docstring'] = parsed_ds
 
         # Constructor docstring for classes
         if inspect.isclass(obj):
